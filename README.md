@@ -13,6 +13,18 @@ Clone-and-go starter: ASP.NET Core Minimal API + PostgreSQL + React (Vite/TS) + 
 - Node.js 20+ (added in Phase 8)
 - PowerShell 7+
 
+### Start Postgres
+
+```powershell
+docker compose up postgres -d
+```
+
+Connects on `localhost:5432` with database `base_app`, user `postgres`, password `postgres`. The connection string matches `appsettings.Development.json` out of the box. To wipe and recreate the volume:
+
+```powershell
+./scripts/reset-db.ps1
+```
+
 ### Run the API
 
 ```powershell
@@ -37,4 +49,4 @@ docs/            Architecture + conventions
 
 ## Status
 
-Phases landed so far: 0 (skeleton), 1 (API shell). See `.claude/plans/base-repo-implementation.md` for the roadmap.
+Phases landed so far: 0 (skeleton), 1 (API shell), 2 (Postgres via docker compose). See `.claude/plans/base-repo-implementation.md` for the roadmap.

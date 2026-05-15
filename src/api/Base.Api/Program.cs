@@ -1,7 +1,11 @@
 using System.Reflection;
+using Base.Api.Data;
+using Base.Api.Health;
 using Base.Api.Infrastructure;
+using Base.Api.Observability;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 const string LocalReactCors = "LocalReact";
 
@@ -24,6 +28,10 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddProblemDetails();
+
+builder.Services.AddAppHealthChecks();
+
+builder.Services.AddAppObservability(builder.Configuration);
 
 var app = builder.Build();
 
@@ -55,6 +63,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors(LocalReactCors);
 
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await DevelopmentSeeder.SeedAsync(db);
+}
+
 var serviceName = builder.Configuration["Observability:ServiceName"] ?? "Base.Api";
 var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0";
 
@@ -66,5 +81,9 @@ app.MapGet("/api/info", () => Results.Ok(new
 }))
 .WithName("GetInfo")
 .WithTags("Info");
+
+app.MapAppHealthChecks();
+
+app.MapAppObservability();
 
 app.Run();
