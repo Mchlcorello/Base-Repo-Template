@@ -17,10 +17,48 @@ services:
       timeout: 3s
       retries: 10
 
+  api:
+    build:
+      context: ./src/api/Base.Api
+      dockerfile: Dockerfile.dev
+    container_name: base-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:5000
+      ConnectionStrings__AppDb: Host=postgres;Port=5432;Database=base_app;Username=postgres;Password=postgres
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./src/api/Base.Api:/src
+      - api_bin:/src/bin
+      - api_obj:/src/obj
+
+  web:
+    build:
+      context: ./src/web
+      dockerfile: Dockerfile.dev
+    container_name: base-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      VITE_API_URL: http://localhost:5000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./src/web:/app
+      - web_node_modules:/app/node_modules
+
   prometheus:
     image: prom/prometheus:v3.1.0
     container_name: base-prometheus
     restart: unless-stopped
+    depends_on:
+      - api
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
@@ -30,8 +68,6 @@ services:
     volumes:
       - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 
   grafana:
     image: grafana/grafana:11.4.0
@@ -54,3 +90,6 @@ volumes:
   postgres_data:
   prometheus_data:
   grafana_data:
+  api_bin:
+  api_obj:
+  web_node_modules:

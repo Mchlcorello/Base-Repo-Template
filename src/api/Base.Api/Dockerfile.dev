@@ -1,0 +1,16 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0
+
+ENV DOTNET_USE_POLLING_FILE_WATCHER=1 \
+    DOTNET_RUNNING_IN_CONTAINER=true \
+    ASPNETCORE_URLS=http://+:5000
+
+WORKDIR /src
+
+COPY Base.Api.csproj ./
+RUN dotnet restore
+
+COPY . ./
+
+EXPOSE 5000
+
+CMD ["dotnet", "watch", "run", "--no-launch-profile", "--non-interactive"]

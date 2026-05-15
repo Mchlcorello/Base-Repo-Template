@@ -4,76 +4,65 @@ Clone-and-go starter: ASP.NET Core Minimal API + PostgreSQL + React (Vite/TS) + 
 
 ## Quickstart
 
-> Phase 10 will replace this section with a one-command `./scripts/dev.ps1` flow. Until then, run each component manually.
-
 ### Prerequisites
 
-- .NET 10 SDK
 - Docker Desktop
-- Node.js 20+ (added in Phase 8)
-- PowerShell 7+
+- (Optional, for editor support / running outside containers) .NET 10 SDK, Node.js 20+, PowerShell 7+
 
-### Start Postgres
+### One command
 
 ```powershell
-docker compose up postgres -d
+docker compose up
 ```
 
-Connects on `localhost:5432` with database `base_app`, user `postgres`, password `postgres`. The connection string matches `appsettings.Development.json` out of the box. To wipe and recreate the volume:
+That's the whole stack — Postgres, API (with hot reload via `dotnet watch`), web (Vite dev), Prometheus, Grafana. Add `-d` to detach. Migrations run automatically on API start in Development; the dev seeder inserts a sample `Item` row.
+
+| Service     | URL                                                              |
+|-------------|------------------------------------------------------------------|
+| Web (SPA)   | http://localhost:5173                                            |
+| API         | http://localhost:5000 (`/api/info`, `/swagger`, `/health`, `/metrics`) |
+| Prometheus  | http://localhost:9090 (target `base-api` scrapes `api:5000`)     |
+| Grafana     | http://localhost:3001 (admin / admin) — `API Overview` dashboard |
+| Postgres    | localhost:5432 (db `base_app`, user/pass `postgres`/`postgres`)  |
+
+### Reset the database
 
 ```powershell
 ./scripts/reset-db.ps1
 ```
 
-### Run the API
+Stops the postgres container, drops the volume, brings it back up. The API will re-migrate on its next start.
+
+### Run the API or web outside the container
+
+The full stack works out of the box. If you'd rather run the API or web on the host (e.g. for richer debugger integration):
 
 ```powershell
+# API on host (requires .NET 10 SDK)
+docker compose up postgres -d
 dotnet run --project src/api/Base.Api
-```
 
-- API: http://localhost:5000
-- Swagger: http://localhost:5000/swagger
-- Info: http://localhost:5000/api/info
-- Metrics: http://localhost:5000/metrics
-- Health: http://localhost:5000/health (and `/health/ready`)
-
-### Start Prometheus
-
-```powershell
-docker compose up prometheus -d
-```
-
-- Prometheus UI: http://localhost:9090
-- Scrapes the API at `host.docker.internal:5000/metrics` every 15s. The API must be running on the host (it isn't containerized yet).
-- Confirm the target is healthy at http://localhost:9090/targets.
-
-### Start Grafana
-
-```powershell
-docker compose up grafana -d
-```
-
-- Grafana UI: http://localhost:3001 (admin / admin)
-- The `Prometheus` datasource and `API Overview` dashboard are provisioned on first boot — no manual setup required.
-- Dashboard URL: http://localhost:3001/d/base-api-overview/api-overview
-
-### Run the web app
-
-```powershell
+# Web on host (requires Node 20+)
+docker compose up postgres api -d
 cd src/web
 npm install
 npm run dev
 ```
 
-- SPA: http://localhost:5173 (matches the API's `LocalReact` CORS policy)
-- The home page renders the live `/api/info` payload via TanStack Query. Reads `VITE_API_URL` from env if set; defaults to `http://localhost:5000`.
-- Tests: `npm test` (Vitest, runs smoke tests under `tests/web/`).
+`appsettings.Development.json` and `src/web/src/app/config.ts` default to `localhost` URLs that work in both modes.
+
+### Tests
+
+```powershell
+dotnet test                # API tests (Phase 9)
+npm --workspace web test   # web tests (Vitest)
+```
 
 ## Layout
 
 ```
 src/api/         ASP.NET Core Minimal API (Base.Api)
-src/web/         React + Vite frontend (Phase 8)
+src/web/         React + Vite frontend
 tests/api/       API test projects
 tests/web/       Frontend test projects
 observability/   Prometheus + Grafana config
