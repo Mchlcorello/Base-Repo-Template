@@ -57,6 +57,18 @@ docker compose up grafana -d
 - The `Prometheus` datasource and `API Overview` dashboard are provisioned on first boot — no manual setup required.
 - Dashboard URL: http://localhost:3001/d/base-api-overview/api-overview
 
+### Run the web app
+
+```powershell
+cd src/web
+npm install
+npm run dev
+```
+
+- SPA: http://localhost:5173 (matches the API's `LocalReact` CORS policy)
+- The home page renders the live `/api/info` payload via TanStack Query. Reads `VITE_API_URL` from env if set; defaults to `http://localhost:5000`.
+- Tests: `npm test` (Vitest, runs smoke tests under `tests/web/`).
+
 ## Layout
 
 ```
@@ -71,4 +83,4 @@ docs/            Architecture + conventions
 
 ## Status
 
-Phases landed so far: 0 (skeleton), 1 (API shell), 2 (Postgres via docker compose), 3 (EF Core + migrations + Item entity), 4 (health checks), 5 (OpenTelemetry + /metrics), 6 (Prometheus scrape), 7 (Grafana + API Overview dashboard). See `.claude/plans/base-repo-implementation.md` for the roadmap.
+Phases landed so far: 0 (skeleton), 1 (API shell), 2 (Postgres via docker compose), 3 (EF Core + migrations + Item entity), 4 (health checks), 5 (OpenTelemetry + /metrics), 6 (Prometheus scrape), 7 (Grafana + API Overview dashboard), 8 (React + Vite + TS web app). See `.claude/plans/base-repo-implementation.md` for the roadmap.

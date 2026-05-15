@@ -1,0 +1,7 @@
+{
+  "name": "base-repo-template-root",
+  "private": true,
+  "workspaces": [
+    "src/web"
+  ]
+}
